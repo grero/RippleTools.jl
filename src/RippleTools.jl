@@ -1,9 +1,13 @@
 module RippleTools
 using PyCall
+using StaticArrays
 @pyimport pyns
 const NSFile = pyns.nsfile[:NSFile]
 const EntityType = pyns.nsentity[:EntityType]
 
+include("types.jl")
+
+bit_order = [4, 5, 7, 1, 10, 12, 13, 15]
 function get_rawdata(fname,channel="all")
     f = NSFile(fname)
     analog_entities = f[:get_entities](EntityType[:analog])
