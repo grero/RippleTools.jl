@@ -26,4 +26,21 @@ function get_rawdata(fname,channel="all")
     data
 end
 
+function extract_markers(fname)
+    f = NSFile(fname)
+    event_entities = f[:get_entities](EntityType[:event])
+    strobes = String[]
+    timestamps = Float64[]
+    for entity in event_entities
+        for i in 1:entity[:item_count]
+            dd = entity[:get_event_data](i-1)
+            push!(strobes,dd[2][1])
+            push!(timestamps, dd[1])
+        end
+    end
+    strobes, timestamps
+end
+
+parse_strobe(strobe::UInt16) = bin(strobe, 16)[bit_order]
+
 end# module
