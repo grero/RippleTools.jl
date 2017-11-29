@@ -1,3 +1,5 @@
+import Base.sizeof
+
 struct BasicHeader
     filetype_id::SVector{8, UInt8}
     filespec::SVector{2, UInt8}
@@ -52,6 +54,62 @@ function BasicHeader2(ff::IOStream)
     time_period = DateTime(tqq[1], tqq[2], tqq[4], tqq[5], tqq[6], tqq[7], tqq[8])
     nchannels = reinterpret(UInt32, bytes[offset:offset+3])[1]
     BasicHeader2(filetype_id, filespec, nbytes, label, comment, createapp, processor_timestamp,period,time_resolution, time_period, nchannels)
+end
+
+struct ExtendedHeader
+    electrode_id::UInt16
+    electode_label::String
+    frontend_id::UInt8
+    frontend_pin::UInt8
+    min_digital_value::Int16
+    max_digitial_value::Int16
+    min_analog_value::Int16
+    max_analog_value::Int16
+    units::String
+    highpass_cutoff::UInt32
+    highpass_order::UInt32
+    highpass_type::UInt16
+    lowpass_cutoff::UInt32
+    lowpass_order::UInt32
+    lowpass_type::UInt16
+end
+
+Base.sizeof(::Type{ExtendedHeader}) = 66
+
+function ExtendedHeader(ff::IOStream)
+    bytes = read(ff, sizeof(ExtendedHeader))
+    offset = 1
+    electrode_id = reinterpret(UInt16, bytes[offset:offset+1])[1]
+    offset += 2
+    electrode_label = unsafe_string(pointer(bytes, offset), 16)
+    offset += 16
+    frontend_id = bytes[offset]
+    offset += 1
+    frontend_pin = bytes[offset]
+    offset += 1
+    min_digital_value = reinterpret(Int16, bytes[offset:offset+1])[1]
+    offset += 2
+    max_digital_value = reinterpret(Int16, bytes[offset:offset+1])[1]
+    offset += 2
+    min_analog_value = reinterpret(Int16, bytes[offset:offset+1])[1]
+    offset += 2
+    max_analog_value = reinterpret(Int16, bytes[offset:offset+1])[1]
+    offset += 2
+    units = unsafe_string(pointer(bytes, offset),16)
+    offset += 16
+    highpass_cutoff = reinterpret(UInt32, bytes[offset:offset+3])[1]
+    offset += 4
+    highpass_order = reinterpret(UInt32, bytes[offset:offset+3])[1]
+    offset += 4
+    highpass_type = reinterpret(UInt16, bytes[offset:offset+3])[1]
+    offset += 2
+    lowpass_cutoff = reinterpret(UInt32, bytes[offset:offset+3])[1]
+    offset += 4
+    lowpass_order = reinterpret(UInt32, bytes[offset:offset+3])[1]
+    offset += 4
+    lowpass_type = reinterpret(UInt16, bytes[offset:offset+3])[1]
+    offset += 2
+    ExtendedHeader(electrode_id, electrode_label, frontend_id, frontend_pin, min_digital_value, max_digital_value, min_analog_value, max_analog_value, units, highpass_cutoff, highpass_order, highpass_type, lowpass_cutoff, lowpass_order, lowpass_type)
 end
 
 function BasicHeader(ff::IOStream)
