@@ -112,6 +112,43 @@ function ExtendedHeader(ff::IOStream)
     ExtendedHeader(electrode_id, electrode_label, frontend_id, frontend_pin, min_digital_value, max_digital_value, min_analog_value, max_analog_value, units, highpass_cutoff, highpass_order, highpass_type, lowpass_cutoff, lowpass_order, lowpass_type)
 end
 
+struct DataPacket
+    header::UInt8
+    timestamp::UInt32
+    npoints::UInt32
+    data::Array{Int16,2}
+end
+
+function DataPacket(ff::IOStream)
+    #rewind the file
+    seek(ff,0)
+    #get the basic header
+    hh = BasicHeader2(ff)
+    seek(ff, hh.nbytes)
+    DataPacket(ff, hh.nchannels)
+end
+
+function DataPacket(ff::IOStream, nchannels::T) where T <: Integer
+    header = read(ff, UInt8)
+    timestamp = read(ff, UInt32)
+    npoints = read(ff, UInt32)
+    data = Mmap.mmap(ff, Matrix{Int16}, (Int64(nchannels), Int64(npoints)))
+    DataPacket(header, timestamp, npoints, data)
+end
+
+function DataPacket_slow(ff::IOStream, channel::Int, nchannels::Int)
+    header = read(ff, UInt8)
+    timestamp = read(ff, UInt32)
+    npoints = read(ff, UInt32)
+    #read the data for the specified channel
+    data = zeros(Int16, npoints)
+    for i in 0:npoints-1
+        seek(ff, 2*(i*nchannels + channel-1))
+        data[i+1] = read(ff, Int16)
+    end
+    DataPacket(header, timestamp, npoints, data)
+end
+
 function BasicHeader(ff::IOStream)
     bytes = read(ff, sizeof(BasicHeader))
     unsafe_load(convert(Ptr{BasicHeader}, pointer(bytes)))
