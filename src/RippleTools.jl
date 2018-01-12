@@ -29,7 +29,7 @@ end
 function extract_markers(fname)
     f = NSFile(fname)
     event_entities = f[:get_entities](EntityType[:event])
-    strobes = String[]
+    strobes = UInt16[]
     timestamps = Float64[]
     for entity in event_entities
         for i in 1:entity[:item_count]
