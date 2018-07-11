@@ -4,8 +4,18 @@ using StaticArrays
 @pyimport pyns
 const NSFile = pyns.nsfile[:NSFile]
 const EntityType = pyns.nsentity[:EntityType]
+using FileIO
+FileIO.add_format(format"NEV", "NEURALEV", ".nev")
+FileIO.add_format(format"NSX", "NEURALCD", [".ns$i" for i in 1:10])
+FileIO.add_loader(format"NSX", :RippleTools)
 
 include("types.jl")
+
+function load(ff::File{format"NSX"})
+    open(ff) do f
+        dd = DataPacket(f.io)
+    end
+end
 
 bit_order = [4, 5, 7, 1, 10, 12, 13, 15]
 function get_rawdata(fname,channel="all")
