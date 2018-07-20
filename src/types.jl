@@ -299,7 +299,7 @@ function get_wftype(header::WaveEventHeader)
         T = Int16
     elseif 2 < nb <= 4
         T = Int32
-    else
+    elseif nb > 4
         T = Int64
     end
     T
