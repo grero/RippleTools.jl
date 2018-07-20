@@ -304,3 +304,8 @@ function get_wftype(header::WaveEventHeader)
     end
     T
 end
+
+function get_time(header::BasicNEVHeader)
+    tt = header.time_origin
+    DateTime(tt[1], tt[2], tt[4], tt[5], tt[6], tt[7], tt[8])
+end
