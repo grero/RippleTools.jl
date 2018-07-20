@@ -1,4 +1,4 @@
-import Base.sizeof
+import Base:sizeof,read
 
 struct BasicHeader
     filetype_id::SVector{8, UInt8}
@@ -155,3 +155,152 @@ function BasicHeader(ff::IOStream)
 end
 
 get_filtype(hh::BasicHeader) = unsafe_string(pointer(convert(Array{UInt8, 1}, hh.filetype_id)),length(hh.filetype_id))
+
+abstract type AbstractNEVHeader end
+
+struct BasicNEVHeader <: AbstractNEVHeader
+    filetype_id::SVector{8,UInt8}
+    filespec::SVector{2,UInt8}
+    flags::UInt16
+    nbytes::UInt32  #total bytes in headers
+    nbytes_packets::UInt32
+    resolution_timestamps::UInt32
+    resolution_samples::UInt32
+    time_origin::SVector{8, UInt16}
+    createap::SVector{32,UInt8}
+    comments::SVector{200, UInt8}
+    reserved::SVector{52, UInt8}
+    processor_timestamp::UInt32
+    n_extended_headers::UInt32
+end
+
+function BasicNEVHeader(ff::IO)
+    bytes = read(ff, sizeof(BasicNEVHeader))
+    unsafe_load(convert(Ptr{BasicNEVHeader}, pointer(bytes)))
+end
+
+function Base.read(io::IO, ::Type{T}) where T <: AbstractNEVHeader
+    bytes = read(io, sizeof(T))
+    unsafe_load(convert(Ptr{T}, pointer(bytes)))
+end
+
+abstract type AbstractNEVExtendedHeader <: AbstractNEVHeader end
+
+struct WaveEventHeader <: AbstractNEVExtendedHeader
+    packet_id::SVector{8,UInt}
+    electrode_id::UInt16
+    frontend_id::UInt8
+    frontend_pin::UInt8
+    digit_factor::UInt16
+    energy_threshold::UInt16
+    high_threshold::Int16
+    low_threshold::Int16
+    sorted_units::UInt8
+    bytes_sample::UInt8
+    stim_digit_factor::Float32
+end
+
+struct FilterEventHeader <: AbstractNEVExtendedHeader
+    packet_id::SVector{8,UInt8}
+    electrode_id::UInt16
+    highpass_freq::UInt32
+    highpass_order::UInt32
+    highpass_type::UInt16
+    lowpass_freq::UInt32
+    lowpass_order::UInt32
+    lowpas_type::UInt16
+end
+
+struct LabelEventHeader <: AbstractNEVExtendedHeader
+    packet_id::SVector{8, UInt8}
+    electrode_id::UInt16
+    label::SVector{16, UInt8}
+    reserved::SVector{6, UInt8}
+end
+
+struct DigitalLabelEventHeader <: AbstractNEVExtendedHeader
+    packet_id::SVector{8,UInt8}
+    label::SVector{16, UInt8}
+    mode::UInt8
+    reserved::SVector{7, UInt8}
+end
+
+function header_type(h::T) where T <: AbstractNEVExtendedHeader
+    unsafe_string(pointer(convert(Vector{UInt8},h.packet_id)))
+end
+
+abstract type AbstractNEVDataPacket end
+
+struct EventDataPacket <: AbstractNEVDataPacket
+    timestamp::UInt32
+    packet_id::UInt16
+    reason::UInt8
+    reserved::UInt8
+    parallel::UInt16
+    sma::SVector{4, Int16}
+    padding::Vector{UInt8}
+end
+
+struct SpikeDataPacket{T<:Integer} <: AbstractNEVDataPacket
+    timestamp::UInt32
+    packed_id::UInt16
+    unit::UInt8
+    reserved::UInt8
+    waveform::Vector{T}
+end
+
+struct StimDataPacket{T<:Integer} <: AbstractNEVDataPacket
+    timestamp::UInt32
+    packed_id::UInt16
+    reserved::UInt16
+    waveform::Vector{T}
+end
+
+function Base.read(ff, ::Type{TT}, header::BasicNEVHeader) where TT <: AbstractNEVDataPacket
+    bytes = read(ff, header.nbytes_packets)
+    unsafe_load(convert(Ptr{TT}, pointer(bytes)))
+end
+
+function get_packet!(io::IOStream, header::BasicNEVHeader, wf_type::DataType)
+    pos = position(io)
+    timestamp = read(io, UInt32)
+    packed_id = read(io, UInt16)
+    #reset and read the appropriate packet
+    seek(io,pos) 
+    if packed_id == 0
+        return read(io, EventDataPacket, header)
+    elseif 1 <= packed_id <= 512
+        return read(io, SpikeDataPacket{wf_type}, header)
+    elseif 5121 <= packed_id <= 5632
+        return read(io, StimDataPacket, header)
+    end
+end
+
+function get_eheader(io::IOStream)
+    pos = position(io)
+    packet_id = read(io, UInt8, 8)
+    seek(io, pos)
+    etype = unsafe_string(pointer(packet_id))
+    if etype == "NEUEVWAV"
+        return read(io, WaveEventHeader)
+    elseif etype == "NEUEVFLT"
+        return read(io, FilterEventHeader)
+    elseif etype == "NEUEVLBL"
+        return read(io, LabelEventHeader)
+    elseif etype == "DIGLABEL"
+        read(io, DigitalLabelEventHeader)
+    end
+end
+
+function get_wftype(header::WaveEventHeader)
+    nb = header.bytes_sample
+    T = Int8
+    if nb == 2 
+        T = Int16
+    elseif 2 < nb <= 4
+        T = Int32
+    else
+        T = Int64
+    end
+    T
+end

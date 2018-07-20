@@ -8,8 +8,10 @@ using FileIO
 FileIO.add_format(format"NEV", "NEURALEV", ".nev")
 FileIO.add_format(format"NSX", "NEURALCD", [".ns$i" for i in 1:10])
 FileIO.add_loader(format"NSX", :RippleTools)
+FileIO.add_loader(format"NEV", :RippleTools)
 
 include("types.jl")
+include("events.jl")
 
 function load(ff::File{format"NSX"})
     open(ff) do f
