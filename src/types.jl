@@ -241,19 +241,19 @@ struct EventDataPacket <: AbstractNEVDataPacket
     padding::Vector{UInt8}
 end
 
-struct SpikeDataPacket{T<:Integer} <: AbstractNEVDataPacket
+struct SpikeDataPacket{T<:Integer, N} <: AbstractNEVDataPacket
     timestamp::UInt32
-    packed_id::UInt16
+    packet_id::UInt16
     unit::UInt8
     reserved::UInt8
-    waveform::Vector{T}
+    waveform::SVector{N,T}
 end
 
-struct StimDataPacket{T<:Integer} <: AbstractNEVDataPacket
+struct StimDataPacket{T<:Integer, N} <: AbstractNEVDataPacket
     timestamp::UInt32
     packed_id::UInt16
     reserved::UInt16
-    waveform::Vector{T}
+    waveform::SVector{N,T}
 end
 
 function Base.read(ff, ::Type{TT}, header::BasicNEVHeader) where TT <: AbstractNEVDataPacket
@@ -264,15 +264,16 @@ end
 function get_packet!(io::IOStream, header::BasicNEVHeader, wf_type::DataType)
     pos = position(io)
     timestamp = read(io, UInt32)
-    packed_id = read(io, UInt16)
+    packet_id = read(io, UInt16)
     #reset and read the appropriate packet
     seek(io,pos) 
-    if packed_id == 0
+    N = div(header.nbytes_packets-8, sizeof(wf_type))
+    if packet_id == 0
         return read(io, EventDataPacket, header)
-    elseif 1 <= packed_id <= 512
-        return read(io, SpikeDataPacket{wf_type}, header)
-    elseif 5121 <= packed_id <= 5632
-        return read(io, StimDataPacket, header)
+    elseif 1 <= packet_id <= 512
+        return read(io, SpikeDataPacket{wf_type, N}, header)
+    elseif 5121 <= packet_id <= 5632
+        return read(io, StimDataPacket{wf_type, N}, header)
     end
 end
 
