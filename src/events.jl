@@ -9,7 +9,11 @@ function load(ff::File{format"NEV"})
         eheaders = Vector{AbstractNEVHeader}(header.n_extended_headers)
         wf_type = Int16
         for i in 1:length(eheaders) 
-            eheaders[i] = get_eheader(fio)
+            eh = get_eheader(fio)
+            if eh == nothing
+                continue
+            end
+            eheaders[i] = eh
             if typeof(eheaders[i]) <: WaveEventHeader
                 wf_type = get_wftype(eheaders[i])
             end
