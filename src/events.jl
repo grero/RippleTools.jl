@@ -18,7 +18,6 @@ function load(ff::File{format"NEV"})
                 wf_type = get_wftype(eheaders[i])
             end
         end
-        @show wf_type
         seek(fio, header.nbytes)
         while !eof(fio)
             packet = get_packet!(fio, header, wf_type)
