@@ -24,7 +24,7 @@ function load(ff::File{format"NEV"})
             tp = typeof(packet)
             if tp <: EventDataPacket
                 push!(event_packets, packet)
-            elseif tp < SpikeDataPacet
+            elseif tp <: SpikeDataPacket
                 push!(spike_packets, packet)
             elseif tp <: StimDataPacket
                 push!(stim_packets, packet)
