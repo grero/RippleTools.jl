@@ -5,10 +5,14 @@ using StaticArrays
 const NSFile = pyns.nsfile[:NSFile]
 const EntityType = pyns.nsentity[:EntityType]
 using FileIO
-FileIO.add_format(format"NEV", "NEURALEV", ".nev")
-FileIO.add_format(format"NSX", "NEURALCD", [".ns$i" for i in 1:10])
-FileIO.add_loader(format"NSX", :RippleTools)
-FileIO.add_loader(format"NEV", :RippleTools)
+
+try
+    FileIO.add_format(format"NEV", "NEURALEV", ".nev")
+    FileIO.add_format(format"NSX", "NEURALCD", [".ns$i" for i in 1:10])
+    FileIO.add_loader(format"NSX", :RippleTools)
+    FileIO.add_loader(format"NEV", :RippleTools)
+catch ee
+end
 
 include("types.jl")
 include("events.jl")
