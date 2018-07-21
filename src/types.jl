@@ -198,6 +198,7 @@ struct WaveEventHeader <: AbstractNEVExtendedHeader
     sorted_units::UInt8
     bytes_sample::UInt8
     stim_digit_factor::Float32
+    padding::SVector{6,UInt8}
 end
 
 struct FilterEventHeader <: AbstractNEVExtendedHeader
@@ -209,6 +210,7 @@ struct FilterEventHeader <: AbstractNEVExtendedHeader
     lowpass_freq::UInt32
     lowpass_order::UInt32
     lowpas_type::UInt16
+    padding::SVector{2,UInt8}
 end
 
 struct LabelEventHeader <: AbstractNEVExtendedHeader
@@ -231,14 +233,14 @@ end
 
 abstract type AbstractNEVDataPacket end
 
-struct EventDataPacket <: AbstractNEVDataPacket
+struct EventDataPacket{N} <: AbstractNEVDataPacket
     timestamp::UInt32
     packet_id::UInt16
     reason::UInt8
     reserved::UInt8
     parallel::UInt16
     sma::SVector{4, Int16}
-    padding::Vector{UInt8}
+    padding::SVector{N,UInt8}
 end
 
 struct SpikeDataPacket{T<:Integer, N} <: AbstractNEVDataPacket
@@ -267,9 +269,10 @@ function get_packet!(io::IOStream, header::BasicNEVHeader, wf_type::DataType)
     packet_id = read(io, UInt16)
     #reset and read the appropriate packet
     seek(io,pos) 
+    Ne = header.nbytes_packets-18
     N = div(header.nbytes_packets-8, sizeof(wf_type))
     if packet_id == 0
-        return read(io, EventDataPacket, header)
+        return read(io, EventDataPacket{Ne}, header)
     elseif 1 <= packet_id <= 512
         return read(io, SpikeDataPacket{wf_type, N}, header)
     elseif 5121 <= packet_id <= 5632
