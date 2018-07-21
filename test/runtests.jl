@@ -1,20 +1,7 @@
 using RippleTools
 using FileIO
+using CSV
 using Base.Test
-
-#@testset "Basic loading" begin
-#    tdir = tempdir()
-#    cd(tdir) do
-#        #download the data file
-#        download("http://cortex.nus.edu.sg/testdata/w3_27_test7.ns5","w3_27_test7.ns5")
-#        dd = FileIO.load("w3_27_test7.ns5")
-#        @test dd.header == 0x01
-#        @test dd.npoints == 0x000dd220
-#        @test dd.timestamp == 0x00000000
-#        @test size(dd.data) == (158, 905760)
-#        @test hash(dd.data) == 0xa1c770be80a4b6b8
-#    end
-#end
 
 @testset "NEV loading" begin
     tdir = tempdir()
@@ -49,3 +36,35 @@ using Base.Test
     end
 end
 
+@testset "Markers" begin
+    tdir = tempdir()
+    cd(tdir) do
+        if !isfile("w7_13.nev")
+            download("http://cortex.nus.edu.sg/testdata/w7_13.nev","w7_13.nev")
+        end
+        if !isfile("event_markers.csv")
+            download("http://cortex.nus.edu.sg/testdata/event_markers.csv","event_markers.csv")
+        end
+        markers,timestamps = RippleTools.extract_markers("w7_13.nev")
+        _ddf = CSV.read("event_markers.csv", types=[String,Float64])
+        @test markers == _ddf[:words]
+        @test timestamps ≈ _ddf[:timestamps]
+    end
+end
+
+
+
+@testset "RawData" begin
+    tdir = tempdir()
+    cd(tdir) do
+        if !isfile("w3_27_test7.ns5")
+            download("http://cortex.nus.edu.sg/testdata/w3_27_test7.ns5","w3_27_test7.ns5")
+        end
+        dd = FileIO.load("w3_27_test7.ns5")
+        @test dd.header == 0x01
+        @test dd.npoints == 0x000dd220
+        @test dd.timestamp == 0x00000000
+        @test size(dd.data) == (158, 905760)
+        @test hash(dd.data) == 0xa1c770be80a4b6b8
+    end
+end
