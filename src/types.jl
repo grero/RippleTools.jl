@@ -292,7 +292,9 @@ function get_eheader(io::IOStream)
     elseif etype == "NEUEVLBL"
         return read(io, LabelEventHeader)
     elseif etype == "DIGLABEL"
-        read(io, DigitalLabelEventHeader)
+        return read(io, DigitalLabelEventHeader)
+    else
+        return nothing
     end
 end
 
