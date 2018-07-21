@@ -180,7 +180,7 @@ function BasicNEVHeader(ff::IO)
 end
 
 function Base.read(io::IO, ::Type{T}) where T <: AbstractNEVHeader
-    bytes = read(io, sizeof(T))
+    bytes = read(io, get_size(T))
     unsafe_load(convert(Ptr{T}, pointer(bytes)))
 end
 
@@ -312,4 +312,12 @@ end
 function get_time(header::BasicNEVHeader)
     tt = header.time_origin
     DateTime(tt[1], tt[2], tt[4], tt[5], tt[6], tt[7], tt[8])
+end
+
+function get_size(::Type{T}) where T <: AbstractNEVHeader
+    ss = 0
+    for f in fieldnames(T)
+        ss += sizeof(fieldtype(T, f))
+    end
+    ss
 end
