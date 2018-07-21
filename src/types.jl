@@ -187,7 +187,7 @@ end
 abstract type AbstractNEVExtendedHeader <: AbstractNEVHeader end
 
 struct WaveEventHeader <: AbstractNEVExtendedHeader
-    packet_id::SVector{8,UInt}
+    packet_id::SVector{8,UInt8}
     electrode_id::UInt16
     frontend_id::UInt8
     frontend_pin::UInt8
