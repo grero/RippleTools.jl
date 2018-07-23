@@ -25,13 +25,13 @@ using Base.Test
         end
         @testset "Test packet" begin
             pp = load("sample_data_set.nev")
-            @test typeof(pp[1][1]) <: RippleTools.EventDataPacket{94}
-            qq = filter(p->p.reason==0x04, pp[1])
+            @test typeof(pp.event_packets[1]) <: RippleTools.EventDataPacket{94}
+            qq = filter(p->p.reason==0x04, pp.event_packets)
             @test length(qq) == 218
             qv = filter(p->p.sma[2] == 32767, qq)
             @test length(qv) == 109
 
-            @test typeof(pp[2][1].waveform) <: RippleTools.SVector{52,Int16}
+            @test typeof(pp.spike_packets[1].waveform) <: RippleTools.SVector{52,Int16}
         end
     end
 end

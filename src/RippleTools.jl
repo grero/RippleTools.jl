@@ -1,6 +1,7 @@
 module RippleTools
 using StaticArrays
 using FileIO
+using Dates
 
 try
     FileIO.add_format(format"NEV", "NEURALEV", ".nev")
@@ -29,7 +30,7 @@ function extract_markers(fname)
     pp = FileIO.load(fname)
     markers = String[]
     timestamps = Float64[]
-    for p in pp[1]
+    for p in pp.event_packets
         if p.reason == 0x01  # strobe
             push!(markers, parse_strobe(p.parallel))
             push!(timestamps, p.timestamp/fs)

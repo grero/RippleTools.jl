@@ -1,8 +1,5 @@
 function load(ff::File{format"NEV"}) 
     open(ff) do f
-        event_packets = Vector{EventDataPacket}(0)
-        spike_packets = Vector{SpikeDataPacket}(0)
-        stim_packets = Vector{StimDataPacket}(0)
         fio = f.io
         header = BasicNEVHeader(fio)  
         #grap the extended headers
@@ -18,6 +15,11 @@ function load(ff::File{format"NEV"})
                 wf_type = get_wftype(eheaders[i])
             end
         end
+        Ne = header.nbytes_packets-18
+        N = div(header.nbytes_packets-8, sizeof(wf_type))
+        event_packets = Vector{EventDataPacket{Ne}}(0)
+        spike_packets = Vector{SpikeDataPacket{wf_type,N}}(0)
+        stim_packets = Vector{StimDataPacket{wf_type,N}}(0)
         seek(fio, header.nbytes)
         while !eof(fio)
             packet = get_packet!(fio, header, wf_type)
@@ -30,6 +32,6 @@ function load(ff::File{format"NEV"})
                 push!(stim_packets, packet)
             end
         end
-        event_packets, spike_packets, stim_packets
+        NEVFile(header, event_packets, spike_packets, stim_packets)
     end
 end
