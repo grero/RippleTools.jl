@@ -1,7 +1,6 @@
 module RippleTools
 using StaticArrays
 using FileIO
-using Dates
 
 try
     FileIO.add_format(format"NEV", "NEURALEV", ".nev")
