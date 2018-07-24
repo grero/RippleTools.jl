@@ -22,6 +22,7 @@ using Base.Test
             @test Vector(header.time_origin) == [2018,3,5,2,21,53,41,625]
             @test header.processor_timestamp == 34198620
             @test header.n_extended_headers == 165
+            @test header.resolution_timestamps == 0x00007530
         end
         @testset "Test packet" begin
             pp = load("sample_data_set.nev")
@@ -32,6 +33,15 @@ using Base.Test
             @test length(qv) == 109
 
             @test typeof(pp.spike_packets[1].waveform) <: RippleTools.SVector{52,Int16}
+            stim_factors = [ff.stim_digit_factor for ff in pp.wave_headers]
+            amp_factors = [ff.digit_factor for ff in pp.wave_headers]
+            stim_factor = stim_factors[findfirst(stim_factors)]
+            amp_factor =  amp_factors[findfirst(amp_factors)]
+            @test amp_factor == 200  # nV
+            idx = findfirst(p->p.timestamp==201, pp.spike_packets)
+            @test pp.spike_packets[idx].waveform == Int16[12, 27, 0, -41, -7, 0, 41, 116, 91, 167, 267, 268, 247, 151, -69, -412, -763, -920, -881, -680, -402, -52, 305, 541, 653, 649, 595, 502, 338, 215, 162, 81, -24, -118, -32, -33, -19, -54, -82, -83, -106, -96, -56, -73, -55, -41, -31, -6, -62, -84, -3, -43]
+            #redundant test, but just to make comparison with Neuroshare easier
+            @test pp.spike_packets[idx].waveform[1:2].*amp_factor*1e-3 ≈ [2.4,5.4]
         end
     end
 end
