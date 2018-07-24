@@ -260,6 +260,10 @@ end
 
 struct NEVFile{N1,N2, N3, T2,T3}
     header::BasicNEVHeader
+    wave_headers::Vector{WaveEventHeader}
+    filter_headers::Vector{FilterEventHeader}
+    label_headers::Vector{LabelEventHeader}
+    dig_label_headers::Vector{DigitalLabelEventHeader}
     event_packets::Vector{EventDataPacket{N1}}
     spike_packets::Vector{SpikeDataPacket{T2,N2}}
     stim_packets::Vector{StimDataPacket{T3,N3}}

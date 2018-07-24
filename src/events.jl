@@ -3,16 +3,25 @@ function load(ff::File{format"NEV"})
         fio = f.io
         header = BasicNEVHeader(fio)  
         #grap the extended headers
-        eheaders = Vector{AbstractNEVHeader}(header.n_extended_headers)
+        wave_headers = Vector{WaveEventHeader}(0)
+        filter_headers = Vector{FilterEventHeader}(0)
+        label_headers = Vector{LabelEventHeader}(0)
+        dig_label_headers = Vector{DigitalLabelEventHeader}(0)
         wf_type = Int16
-        for i in 1:length(eheaders) 
+        for i in 1:header.n_extended_headers
             eh = get_eheader(fio)
             if eh == nothing
                 continue
             end
-            eheaders[i] = eh
-            if typeof(eheaders[i]) <: WaveEventHeader
-                wf_type = get_wftype(eheaders[i])
+            if typeof(eh) <: WaveEventHeader
+                wf_type = get_wftype(eh)
+                push!(wave_headers, eh)
+            elseif typeof(eh) <: FilterEventHeader
+                push!(filter_headers, eh)
+            elseif typeof(eh) <: LabelEventHeader
+                push!(label_headers, eh)
+            elseif typeof(eh) <: DigitalLabelEventHeader
+                push!(dig_label_headers, eh)
             end
         end
         Ne = header.nbytes_packets-18
@@ -32,6 +41,6 @@ function load(ff::File{format"NEV"})
                 push!(stim_packets, packet)
             end
         end
-        NEVFile(header, event_packets, spike_packets, stim_packets)
+        NEVFile(header, wave_headers, filter_headers, label_headers, dig_label_headers, event_packets, spike_packets, stim_packets)
     end
 end
