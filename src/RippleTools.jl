@@ -7,6 +7,8 @@ try
     FileIO.add_format(format"NSX", "NEURALCD", [".ns$i" for i in 1:10])
     FileIO.add_loader(format"NSX", :RippleTools)
     FileIO.add_loader(format"NEV", :RippleTools)
+    FileIO.add_format(format"NFX", "NEUCDFLT", [".nf$i" for i in 1:10])
+    FileIO.add_loader(format"NFX", :RippleTools)
 catch ee
 end
 
@@ -15,7 +17,29 @@ include("events.jl")
 
 function load(ff::File{format"NSX"})
     open(ff) do f
-        dd = DataPacket(f.io)
+        hh = BasicHeader2(f.io)
+        nchannels = Int(hh.nchannels)
+        eheaders = Vector{ExtendedHeader}(nchannels)
+        for c in 1:nchannels
+            eheaders[c] = ExtendedHeader(f.io)
+        end
+        seek(f.io, hh.nbytes)
+        dd = DataPacket(f.io, hh.nchannels)
+        NSXFile(hh,eheaders,dd)
+    end
+end
+
+function load(ff::File{format"NFX"})
+    open(ff) do f
+        header = NFXBasicHeader(f.io)
+        nchannels = Int(header.nchannels)
+        eheaders = Vector{NFXExtendedHeader}(nchannels)
+        for c in 1:nchannels
+            eheaders[c] = get_header(f.io, NFXExtendedHeader)
+        end
+        seek(f.io, header.nbytes)
+        dd = NFXDataPacket(f.io, header.nchannels)
+        NFXFile(header,eheaders,dd)
     end
 end
 

@@ -333,7 +333,83 @@ function get_time(header::BasicNEVHeader)
     DateTime(tt[1], tt[2], tt[4], tt[5], tt[6], tt[7], tt[8])
 end
 
-function get_size(::Type{T}) where T <: AbstractNEVHeader
+struct NFXBasicHeader
+    filetype_id::SVector{8,UInt8}
+    filespec::SVector{2,UInt8}
+    nbytes::UInt32
+    label::SVector{16,UInt8}
+    comments::SVector{200,UInt8}
+    createapp::SVector{52,UInt8}
+    processor_timestamp::UInt32
+    period::UInt32
+    resolution_timestamps::UInt32
+    time_origin::SVector{8,UInt16}
+    nchannels::UInt32
+end
+
+function NFXBasicHeader(ff::IO)
+    args = Any[]
+    for f in fieldnames(NFXBasicHeader)
+        ft = fieldtype(NFXBasicHeader, f)
+        push!(args, read(ff,ft)) 
+    end
+    NFXBasicHeader(args...)
+end
+
+struct NFXExtendedHeader
+    header_type::SVector{2, UInt8}
+    electrode_id::UInt16
+    electrode_label::SVector{16, UInt8}
+    frontend_id::UInt8
+    frontend_pin::UInt8
+    min_digital_value::Int16
+    max_digital_value::Int16
+    min_analog_value::Int16
+    max_analog_value::Int16
+    units::SVector{16, UInt8}
+    highpass_freq::UInt32
+    highpass_order::UInt32
+    highpass_type::UInt16
+    lowpass_freq::UInt32
+    lowpass_order::UInt32
+    lowpass_type::UInt16
+end
+
+function get_label(hh::NFXExtendedHeader)
+    unsafe_string(pointer(Vector(hh.electrode_label)))
+end
+
+function get_header(ff::IO, ::Type{T}) where T <: Union{NFXBasicHeader, NFXExtendedHeader}
+    args = Any[]
+    for f in fieldnames(T)
+        ft = fieldtype(T, f)
+        push!(args, read(ff,ft)) 
+    end
+    T(args...)
+end
+
+struct NFXDataPacket
+    header::UInt8
+    timestamp::UInt32
+    npoints::UInt32
+    data::Matrix{Float32}
+end
+
+function NFXDataPacket(ff::IOStream, nchannels::T) where T <: Integer
+    header = read(ff, UInt8)
+    timestamp = read(ff, UInt32)
+    npoints = read(ff, UInt32)
+    data = Mmap.mmap(ff, Matrix{Float32}, (Int64(nchannels), Int64(npoints)))
+    NFXDataPacket(header, timestamp, npoints, data)
+end
+
+struct NFXFile
+    header::NFXBasicHeader
+    eheaders::Vector{NFXExtendedHeader}
+    data::NFXDataPacket
+end
+
+function get_size(::Type{T}) where T <: Union{AbstractNEVHeader, NFXBasicHeader, NFXExtendedHeader}
     ss = 0
     for f in fieldnames(T)
         ss += sizeof(fieldtype(T, f))
