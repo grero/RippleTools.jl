@@ -58,7 +58,7 @@ end
 
 struct ExtendedHeader
     electrode_id::UInt16
-    electode_label::String
+    electrode_label::String
     frontend_id::UInt8
     frontend_pin::UInt8
     min_digital_value::Int16
