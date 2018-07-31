@@ -119,6 +119,12 @@ struct DataPacket
     data::Array{Int16,2}
 end
 
+struct NSXFile
+    header::BasicHeader2
+    extended_headers::Vector{ExtendedHeader}
+    data::DataPacket
+end
+
 function DataPacket(ff::IOStream)
     #rewind the file
     seek(ff,0)
