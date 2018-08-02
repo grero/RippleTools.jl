@@ -1,6 +1,7 @@
 module RippleTools
 using StaticArrays
 using FileIO
+using ProgressMeter
 
 try
     FileIO.add_format(format"NEV", "NEURALEV", ".nev")

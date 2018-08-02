@@ -1,7 +1,11 @@
 function load(ff::File{format"NEV"}) 
+    #get the size of the file
+    ss = stat(ff.filename)
+    pp = Progress(ss.size, 1)
     open(ff) do f
         fio = f.io
         header = BasicNEVHeader(fio)  
+        update!(pp, position(fio))
         #grap the extended headers
         wave_headers = Vector{WaveEventHeader}(0)
         filter_headers = Vector{FilterEventHeader}(0)
@@ -10,6 +14,7 @@ function load(ff::File{format"NEV"})
         wf_type = Int16
         for i in 1:header.n_extended_headers
             eh = get_eheader(fio)
+            update!(pp, position(fio))
             if eh == nothing
                 continue
             end
@@ -32,6 +37,7 @@ function load(ff::File{format"NEV"})
         seek(fio, header.nbytes)
         while !eof(fio)
             packet = get_packet!(fio, header, wf_type)
+            update!(pp, position(fio))
             tp = typeof(packet)
             if tp <: EventDataPacket
                 push!(event_packets, packet)
