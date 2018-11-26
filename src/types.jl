@@ -138,7 +138,12 @@ function DataPacket(ff::IOStream, nchannels::T) where T <: Integer
     header = read(ff, UInt8)
     timestamp = read(ff, UInt32)
     npoints = read(ff, UInt32)
-    data = Mmap.mmap(ff, Matrix{Int16}, (Int64(nchannels), Int64(npoints)))
+    ichs = Int64(nchannels)
+    inpoints = Int64(npoints)
+    #rdata = Mmap.mmap(ff, Vector{UInt8}, sizeof(Int16)*ichs*inpoints,position(ff))
+    #data = UnalignedVector{Int16}(rdata)
+    data = fill(zero(Int16), ichs, inpoints)
+    data = read!(ff, data)
     DataPacket(header, timestamp, npoints, data)
 end
 
