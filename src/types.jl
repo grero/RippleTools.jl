@@ -62,7 +62,7 @@ struct ExtendedHeader
     frontend_id::UInt8
     frontend_pin::UInt8
     min_digital_value::Int16
-    max_digitial_value::Int16
+    max_digital_value::Int16
     min_analog_value::Int16
     max_analog_value::Int16
     units::String
