@@ -20,7 +20,7 @@ function load(ff::File{format"NSX"})
     open(ff) do f
         hh = BasicHeader2(f.io)
         nchannels = Int(hh.nchannels)
-        eheaders = Vector{ExtendedHeader}(nchannels)
+        eheaders = Vector{ExtendedHeader}(undef, nchannels)
         for c in 1:nchannels
             eheaders[c] = ExtendedHeader(f.io)
         end
@@ -63,6 +63,6 @@ function extract_markers(fname)
     markers, timestamps
 end
 
-parse_strobe(strobe::UInt16) = bin(strobe, 16)[bit_order]
+parse_strobe(strobe::UInt16) = string(strobe, base=2,pad=16)[bit_order]
 
 end# module
