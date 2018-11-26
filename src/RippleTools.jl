@@ -2,16 +2,8 @@ module RippleTools
 using StaticArrays
 using FileIO
 using Dates
-
-try
-    FileIO.add_format(format"NEV", "NEURALEV", ".nev")
-    FileIO.add_format(format"NSX", "NEURALCD", [".ns$i" for i in 1:10])
-    FileIO.add_loader(format"NSX", :RippleTools)
-    FileIO.add_loader(format"NEV", :RippleTools)
-    FileIO.add_format(format"NFX", "NEUCDFLT", [".nf$i" for i in 1:10])
-    FileIO.add_loader(format"NFX", :RippleTools)
-catch ee
-end
+using Mmap
+using UnalignedVectors
 
 include("types.jl")
 include("events.jl")
