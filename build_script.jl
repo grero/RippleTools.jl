@@ -1,3 +1,4 @@
+using Pkg
 Pkg.update()
 try
     Pg.rm("RippleTools")
