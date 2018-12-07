@@ -304,7 +304,7 @@ end
 
 function get_eheader(io::IOStream)
     pos = position(io)
-    packet_id = read(io, UInt8, 8)
+    packet_id = read!(io, Vector{UInt8}(undef, 8))
     seek(io, pos)
     etype = unsafe_string(pointer(packet_id))
     if etype == "NEUEVWAV"
