@@ -404,8 +404,11 @@ function NFXDataPacket(ff::IOStream, nchannels::T) where T <: Integer
     header = read(ff, UInt8)
     timestamp = read(ff, UInt32)
     npoints = read(ff, UInt32)
-    data = Mmap.mmap(ff, Matrix{Float32}, (Int64(nchannels), Int64(npoints)))
-    NFXDataPacket(header, timestamp, npoints, data)
+    inpoints = Int64(npoints)
+    inchs = Int64(nchannels)
+    rdata = Mmap.mmap(ff, Vector{UInt8}, sizeof(Float32)*Int64(nchannels)*Int64(npoints))
+    data = UnalignedVector{Float32}(rdata)
+    NFXDataPacket(header, timestamp, npoints, reshape(data, inchs, inpoints))
 end
 
 struct NFXFile
