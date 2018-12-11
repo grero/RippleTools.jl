@@ -13,7 +13,7 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 deps = ["Pkg", "Random", "Test"]
 git-tree-sha1 = "49e3f79aebfa16adbb3d5303e974f245534ba817"
 repo-rev = "roger"
-repo-url = "git@github.com:grero/FileIO.jl.git"
+repo-url = "https://github.com/grero/FileIO.jl.git"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.0.4+"
 
