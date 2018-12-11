@@ -1,7 +1,7 @@
-using RippleTools
-using FileIO
 using CSV
-using Base.Test
+using FileIO
+using RippleTools
+using Test
 
 @testset "NEV loading" begin
     tdir = tempdir()
@@ -25,7 +25,8 @@ using Base.Test
             @test header.resolution_timestamps == 0x00007530
         end
         @testset "Test packet" begin
-            pp = load("sample_data_set.nev")
+            FileIO.query("sample_data_set.nev")
+            pp = FileIO.load("sample_data_set.nev")
             @test typeof(pp.event_packets[1]) <: RippleTools.EventDataPacket{94}
             qq = filter(p->p.reason==0x04, pp.event_packets)
             @test length(qq) == 218
@@ -35,8 +36,8 @@ using Base.Test
             @test typeof(pp.spike_packets[1].waveform) <: RippleTools.SVector{52,Int16}
             stim_factors = [ff.stim_digit_factor for ff in pp.wave_headers]
             amp_factors = [ff.digit_factor for ff in pp.wave_headers]
-            stim_factor = stim_factors[findfirst(stim_factors)]
-            amp_factor =  amp_factors[findfirst(amp_factors)]
+            stim_factor = stim_factors[findfirst(x->x>0, stim_factors)]
+            amp_factor =  amp_factors[findfirst(x->x>0, amp_factors)]
             @test amp_factor == 200  # nV
             idx = findfirst(p->p.timestamp==201, pp.spike_packets)
             @test pp.spike_packets[idx].waveform == Int16[12, 27, 0, -41, -7, 0, 41, 116, 91, 167, 267, 268, 247, 151, -69, -412, -763, -920, -881, -680, -402, -52, 305, 541, 653, 649, 595, 502, 338, 215, 162, 81, -24, -118, -32, -33, -19, -54, -82, -83, -106, -96, -56, -73, -55, -41, -31, -6, -62, -84, -3, -43]
@@ -71,10 +72,24 @@ end
             download("http://cortex.nus.edu.sg/testdata/w3_27_test7.ns5","w3_27_test7.ns5")
         end
         dd = FileIO.load("w3_27_test7.ns5")
+        #@show dd.extended_headers
+        #amp_factors = [ff.digit_factor for ff in dd.wave_headers]
+        #@show amp_factors
         @test dd.header.filetype_id == "NEURALCD"
         @test dd.data.npoints == 0x000dd220
         @test dd.data.timestamp == 0x00000000
         @test size(dd.data.data) == (158, 905760)
-        @test hash(dd.data.data) == 0xa1c770be80a4b6b8
+        @test dd.data.data[1,1:10] == Int16[1689, 1715, 1723, 1663, 1670, 1692, 1661, 1693, 1724, 1695]
+        min_digital_value = dd.extended_headers[1].min_digital_value
+        max_digital_value = dd.extended_headers[1].max_digital_value
+        min_analog_value = dd.extended_headers[1].min_analog_value
+        max_analog_value = dd.extended_headers[1].max_analog_value
+        q = (float.(dd.data.data[1,1:10]) .- float(min_digital_value))./(float(max_digital_value) - float(min_digital_value))
+        q .= (float(max_analog_value) .- float(min_analog_value))*q .+ float(min_analog_value)
+        @test q[1] ≈ 422.2113406781227
+        @test q[2] ≈ 428.7107455671867
+        @test q[3] ≈ 430.71056245613 
+        @test q[4] ≈ 415.71193578905513
+        @test q[5] ≈ 417.46177556688235 
     end
 end

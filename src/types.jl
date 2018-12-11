@@ -62,7 +62,7 @@ struct ExtendedHeader
     frontend_id::UInt8
     frontend_pin::UInt8
     min_digital_value::Int16
-    max_digitial_value::Int16
+    max_digital_value::Int16
     min_analog_value::Int16
     max_analog_value::Int16
     units::String
@@ -138,7 +138,12 @@ function DataPacket(ff::IOStream, nchannels::T) where T <: Integer
     header = read(ff, UInt8)
     timestamp = read(ff, UInt32)
     npoints = read(ff, UInt32)
-    data = Mmap.mmap(ff, Matrix{Int16}, (Int64(nchannels), Int64(npoints)))
+    ichs = Int64(nchannels)
+    inpoints = Int64(npoints)
+    #rdata = Mmap.mmap(ff, Vector{UInt8}, sizeof(Int16)*ichs*inpoints,position(ff))
+    #data = UnalignedVector{Int16}(rdata)
+    data = fill(zero(Int16), ichs, inpoints)
+    data = read!(ff, data)
     DataPacket(header, timestamp, npoints, data)
 end
 
@@ -299,7 +304,7 @@ end
 
 function get_eheader(io::IOStream)
     pos = position(io)
-    packet_id = read(io, UInt8, 8)
+    packet_id = read!(io, Vector{UInt8}(undef, 8))
     seek(io, pos)
     etype = unsafe_string(pointer(packet_id))
     if etype == "NEUEVWAV"
@@ -399,8 +404,11 @@ function NFXDataPacket(ff::IOStream, nchannels::T) where T <: Integer
     header = read(ff, UInt8)
     timestamp = read(ff, UInt32)
     npoints = read(ff, UInt32)
-    data = Mmap.mmap(ff, Matrix{Float32}, (Int64(nchannels), Int64(npoints)))
-    NFXDataPacket(header, timestamp, npoints, data)
+    inpoints = Int64(npoints)
+    inchs = Int64(nchannels)
+    rdata = Mmap.mmap(ff, Vector{UInt8}, sizeof(Float32)*Int64(nchannels)*Int64(npoints))
+    data = UnalignedVector{Float32}(rdata)
+    NFXDataPacket(header, timestamp, npoints, reshape(data, inchs, inpoints))
 end
 
 struct NFXFile

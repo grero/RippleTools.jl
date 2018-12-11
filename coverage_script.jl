@@ -1,4 +1,5 @@
 ## This script prints coverage information.
+using Pkg
 Pkg.add("Coverage")
 cd(Pkg.dir("RippleAnalysis"))
 using Coverage
