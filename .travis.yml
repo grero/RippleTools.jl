@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
+  - 1.0
   - nightly
 notifications:
   email: false
@@ -23,7 +23,7 @@ matrix:
 #    packages:
 #    - gfortran
 before_script: # homebrew for mac
-  - julia travis_build_script.jl
+  - julia --project=. -e "using Pkg;Pkg.instantiate()"
 
 ## uncomment the following lines to override the default test script
 #script:
