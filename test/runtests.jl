@@ -25,7 +25,6 @@ using Test
             @test header.resolution_timestamps == 0x00007530
         end
         @testset "Test packet" begin
-            FileIO.query("sample_data_set.nev")
             pp = FileIO.load("sample_data_set.nev")
             @test typeof(pp.event_packets[1]) <: RippleTools.EventDataPacket{94}
             qq = filter(p->p.reason==0x04, pp.event_packets)
@@ -88,8 +87,26 @@ end
         q .= (float(max_analog_value) .- float(min_analog_value))*q .+ float(min_analog_value)
         @test q[1] ≈ 422.2113406781227
         @test q[2] ≈ 428.7107455671867
-        @test q[3] ≈ 430.71056245613 
+        @test q[3] ≈ 430.71056245613
         @test q[4] ≈ 415.71193578905513
-        @test q[5] ≈ 417.46177556688235 
+        @test q[5] ≈ 417.46177556688235
+
+		@testset "Stream" begin
+			pp = RippleTools.DataPacketStreamer(open("w3_27_test7.ns5"), true)
+			@test pp.offset == 10751
+			@show Int(pp.nchannels)
+			@test pp.nchannels == 158
+			@test pp.npoints == 0x000dd220
+			@test pp.position == 0
+			@test position(pp.io) == 10751
+			data1 = read(pp, 100)
+			data2 = read(pp, 100)
+			seek(pp, 0)
+			@test pp.position == 0
+			@test position(pp.io) == 10751
+			data3 = read(pp, 200)
+			@test cat(data1,data2, dims=2) == data3
+			close(pp)
+		end
     end
 end
