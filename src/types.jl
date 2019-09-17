@@ -155,7 +155,7 @@ Seek the stream in units of a full data point, i.e. by number of channels
 """
 function Base.seek(reader::DataPacketStreamer, pos)
 	if 0 <= pos < reader.npoints
-		seek(reader.io, reader.offset + pos*reader.nchannels)
+		seek(reader.io, reader.offset + pos*reader.nchannels*2)
 		reader.position = pos
 	end
 end
