@@ -100,7 +100,9 @@ end
 			@test pp.position == 0
 			@test position(pp.io) == 10751
 			data1 = read(pp, 100)
+			@test pp.position == 100
 			data2 = read(pp, 100)
+			@test pp.position == 200
 			seek(pp, 0)
 			@test pp.position == 0
 			@test position(pp.io) == 10751
