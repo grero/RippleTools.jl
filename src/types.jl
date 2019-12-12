@@ -119,6 +119,53 @@ struct DataPacket
     data::Array{Int16,2}
 end
 
+mutable struct DataPacketStreamer
+	io::IO
+	offset::UInt64
+	position::UInt64
+    header::UInt8
+    timestamp::UInt32
+	npoints::UInt32
+	nchannels::UInt16
+	ownstream::Bool
+end
+
+function DataPacketStreamer(io::IO, ownstream::Bool)
+    seek(io,0)
+    hh = BasicHeader2(io)
+	seek(io, hh.nbytes)
+    header = read(io, UInt8)
+    timestamp = read(io, UInt32)
+    npoints = read(io, UInt32)
+	offset = position(io)
+    ichs = UInt16(hh.nchannels)
+    inpoints = Int64(npoints)
+	DataPacketStreamer(io, offset, 0, header, timestamp, npoints, ichs, ownstream)
+end
+
+function Base.read(reader::DataPacketStreamer, npoints::Int64)
+    data = fill(zero(Int16), reader.nchannels, npoints)
+    data = read!(reader.io, data)
+	reader.position += npoints
+	data
+end
+
+"""
+Seek the stream in units of a full data point, i.e. by number of channels
+"""
+function Base.seek(reader::DataPacketStreamer, pos)
+	if 0 <= pos < reader.npoints
+		seek(reader.io, reader.offset + pos*reader.nchannels*2)
+		reader.position = pos
+	end
+end
+
+Base.eof(reader::DataPacketStreamer) = eof(reader.io)
+
+function Base.close(reader::DataPacketStreamer)
+	reader.ownstream && close(reader.io)
+end
+
 struct NSXFile
     header::BasicHeader2
     extended_headers::Vector{ExtendedHeader}
