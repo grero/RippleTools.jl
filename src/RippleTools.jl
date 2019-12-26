@@ -43,7 +43,7 @@ function extract_markers(fname::String)
         read(ff, BasicNEVHeader)
     end
     fs = header.resolution_timestamps
-    pp = load(format"NEV", fname)
+	pp = load(File(format"NEV", fname))
     markers = String[]
     timestamps = Float64[]
     for p in pp.event_packets
