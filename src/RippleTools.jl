@@ -38,12 +38,12 @@ end
 
 bit_order = [4, 5, 7, 1, 10, 12, 13, 15]
 
-function extract_markers(fname)
+function extract_markers(fname::String)
     header = open(fname,"r") do ff
         read(ff, BasicNEVHeader)
     end
     fs = header.resolution_timestamps
-    pp = FileIO.load(fname)
+	pp = load(File(format"NEV", fname))
     markers = String[]
     timestamps = Float64[]
     for p in pp.event_packets
