@@ -56,9 +56,9 @@ end
             download("http://cortex.nus.edu.sg/testdata/event_markers.csv","event_markers.csv")
         end
         markers,timestamps = RippleTools.extract_markers("w7_13.nev")
-        _ddf = CSV.read("event_markers.csv", types=[String,Float64])
-        @test markers == _ddf[:words]
-        @test timestamps ≈ _ddf[:timestamps]
+        _ddf = CSV.File("event_markers.csv", types=[String,Float64])
+		@test markers == _ddf.columns[1]
+		@test timestamps ≈ _ddf.columns[2]
     end
 end
 
