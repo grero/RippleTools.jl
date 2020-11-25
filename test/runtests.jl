@@ -25,7 +25,7 @@ using Test
             @test header.resolution_timestamps == 0x00007530
         end
         @testset "Test packet" begin
-            pp = FileIO.load("sample_data_set.nev")
+			pp = RippleTools.load(FileIO.File(FileIO.format"NEV", "sample_data_set.nev"))
             @test typeof(pp.event_packets[1]) <: RippleTools.EventDataPacket{94}
             qq = filter(p->p.reason==0x04, pp.event_packets)
             @test length(qq) == 218
@@ -70,7 +70,7 @@ end
         if !isfile("w3_27_test7.ns5")
             download("http://cortex.nus.edu.sg/testdata/w3_27_test7.ns5","w3_27_test7.ns5")
         end
-        dd = FileIO.load("w3_27_test7.ns5")
+		dd = RippleTools.load(FileIO.File(FileIO.format"NSX", "w3_27_test7.ns5"))
         #@show dd.extended_headers
         #amp_factors = [ff.digit_factor for ff in dd.wave_headers]
         #@show amp_factors
