@@ -145,7 +145,12 @@ end
 
 function Base.read(reader::DataPacketStreamer, npoints::Int64)
     data = fill(zero(Int16), reader.nchannels, npoints)
-    data = read!(reader.io, data)
+	data = read!(reader, data)
+end
+
+function Base.read!(reader::DataPacketStreamer, data::Matrix{Int16})
+	read!(reader.io, data)
+	npoints = size(data,2)
 	reader.position += npoints
 	data
 end
