@@ -28,7 +28,7 @@ struct BasicHeader2
     nchannels::UInt32
 end
 
-function BasicHeader2(ff::IOStream)
+function BasicHeader2(ff::IO)
     bytes = read(ff, sizeof(BasicHeader))
     offset = 1
     filetype_id = unsafe_string(pointer(bytes),8)
