@@ -77,6 +77,10 @@ end
 Base.sizeof(::Type{ExtendedHeader}) = 66
 
 function ExtendedHeader(ff::IOStream)
+    read(ff, ExtendedHeader)
+end
+
+function Base.read(ff::IO, ::Type{ExtendedHeader})
     bytes = read(ff, sizeof(ExtendedHeader))
     offset = 1
     electrode_id = reinterpret(UInt16, bytes[offset:offset+1])[1]
@@ -124,15 +128,23 @@ mutable struct DataPacketStreamer
 	offset::UInt64
 	position::UInt64
     header::UInt8
+    headers::Vector{ExtendedHeader}
     timestamp::UInt32
 	npoints::UInt32
 	nchannels::UInt16
 	ownstream::Bool
 end
 
+low_cutoff(packet, channel::Int) = low_cutoff(packet.headers[channel])
+high_cutoff(packet, channel::Int) = high_cutoff(packet.headers[channel])
+
 function DataPacketStreamer(io::IO, ownstream::Bool)
     seek(io,0)
     hh = BasicHeader2(io)
+    headers = Vector{ExtendedHeader}(undef, hh.nchannels)
+    for ch in 1:hh.nchannels
+        headers[ch] = read(io, ExtendedHeader)
+    end
 	seek(io, hh.nbytes)
     header = read(io, UInt8)
     timestamp = read(io, UInt32)
@@ -140,7 +152,7 @@ function DataPacketStreamer(io::IO, ownstream::Bool)
 	offset = position(io)
     ichs = UInt16(hh.nchannels)
     inpoints = Int64(npoints)
-	DataPacketStreamer(io, offset, 0, header, timestamp, npoints, ichs, ownstream)
+	DataPacketStreamer(io, offset, 0, header, headers, timestamp, npoints, ichs, ownstream)
 end
 
 function Base.read(reader::DataPacketStreamer, npoints::Int64)
