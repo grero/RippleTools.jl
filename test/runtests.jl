@@ -93,8 +93,13 @@ end
 
 		@testset "Stream" begin
 			pp = RippleTools.DataPacketStreamer(open("w3_27_test7.ns5"), true)
+            @test RippleTools.low_cutoff(pp, 1) == 7500.0
+            @test RippleTools.high_cutoff(pp, 1) == 0.3
 			@test pp.offset == 10751
-			@show Int(pp.nchannels)
+			@test pp.nchannels == 158
+			@test pp.npoints == 0x000dd220
+			@test pp.position == 0
+			@test pp.offset == 10751
 			@test pp.nchannels == 158
 			@test pp.npoints == 0x000dd220
 			@test pp.position == 0
