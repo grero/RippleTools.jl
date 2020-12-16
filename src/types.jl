@@ -74,6 +74,9 @@ struct ExtendedHeader
     lowpass_type::UInt16
 end
 
+low_cutoff(header::ExtendedHeader) = header.lowpass_cutoff/1000.0
+high_cutoff(header::ExtendedHeader) = header.highpass_cutoff/1000.0
+
 Base.sizeof(::Type{ExtendedHeader}) = 66
 
 function ExtendedHeader(ff::IOStream)
