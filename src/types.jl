@@ -138,6 +138,12 @@ mutable struct DataPacketStreamer
 	ownstream::Bool
 end
 
+function Base.show(io::IO, packet::DataPacketStreamer)
+    print(io, "DataPacketStreamer:\n")
+    print(io, "\tnchannels: $(packet.nchannels)\n")
+    print(io, "\tndatapoints: $(packet.npoints)\n")
+end
+
 low_cutoff(packet, channel::Int) = low_cutoff(packet.headers[channel])
 high_cutoff(packet, channel::Int) = high_cutoff(packet.headers[channel])
 
