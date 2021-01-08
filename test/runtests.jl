@@ -93,6 +93,10 @@ end
 
 		@testset "Stream" begin
 			pp = RippleTools.DataPacketStreamer(open("w3_27_test7.ns5"), true)
+            io = IOBuffer()
+            show(io,pp)
+            ss = String(take!(io))
+            @test ss == "DataPacketStreamer:\n\tnchannels: 158\n\tndatapoints: 905760\n"
             @test RippleTools.low_cutoff(pp, 1) == 7500.0
             @test RippleTools.high_cutoff(pp, 1) == 0.3
 			@test pp.offset == 10751
