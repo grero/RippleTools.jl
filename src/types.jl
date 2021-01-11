@@ -188,6 +188,29 @@ end
 
 Base.eof(reader::DataPacketStreamer) = eof(reader.io)
 
+"""
+Read all data from a single channel
+"""
+function readchannel(reader::DataPacketStreamer, channel::Integer;chunksize=1024^2)
+    data = fill(zero(Int16), reader.npoints)
+    _npoints = div(div(chunksize,2), reader.nchannels)
+    chunks = collect(range(0, stop=reader.npoints, step=_npoints))
+    #check the last chunk
+    if chunks == [1]
+        chunks = [1,reader.npoints]
+    end
+    chunks[end] = reader.npoints
+    _npoints = maximum(diff(chunks))+1
+    _data = fill(zero(Int16), reader.nchannels, _npoints)
+    fs = Int64(filesize(reader.io))
+    for (i0, i1) in zip(1:length(chunks)-1, 2:length(chunks))
+        _diff = chunks[i1] - chunks[i0]
+        read!(reader, view(_data, :, 1:_diff))
+        data[chunks[i0]+1:chunks[i1]] .= _data[channel,1:_diff]
+    end
+    data
+end
+
 function Base.close(reader::DataPacketStreamer)
 	reader.ownstream && close(reader.io)
 end
