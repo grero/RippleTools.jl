@@ -211,6 +211,16 @@ function readchannel(reader::DataPacketStreamer, channel::Integer;chunksize=1024
     data
 end
 
+function readchannel2(reader::DataPacketStreamer, channel::Integer)
+    fs = Int64(filesize(reader.io))
+    data = fill(zero(Int16), reader.npoints)
+    @showprogress 1.0 "Loading data..." for i in 1:reader.npoints
+        seek(reader.io, reader.offset + ((i-1)*reader.nchannels + channel-1)*2)
+        data[i] = read(reader.io, Int16)
+    end
+    data
+end
+
 function Base.close(reader::DataPacketStreamer)
 	reader.ownstream && close(reader.io)
 end
