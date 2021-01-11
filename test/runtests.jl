@@ -125,6 +125,9 @@ end
             seek(pp,0)
             alldata = RippleTools.read(pp, pp.npoints)
             @test alldata[31,:] ≈ channeldata
+            seek(pp,0)
+            channeldata2 = RippleTools.readchannel2(pp,31)
+            @test channeldata2 == channeldata
 			close(pp)
 		end
     end
