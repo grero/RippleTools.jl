@@ -164,12 +164,12 @@ function DataPacketStreamer(io::IO, ownstream::Bool)
 	DataPacketStreamer(io, offset, 0, header, headers, timestamp, npoints, ichs, ownstream)
 end
 
-function Base.read(reader::DataPacketStreamer, npoints::Int64)
+function Base.read(reader::DataPacketStreamer, npoints::Integer)
     data = fill(zero(Int16), reader.nchannels, npoints)
 	data = read!(reader, data)
 end
 
-function Base.read!(reader::DataPacketStreamer, data::Matrix{Int16})
+function Base.read!(reader::DataPacketStreamer, data::AbstractMatrix{Int16})
 	read!(reader.io, data)
 	npoints = size(data,2)
 	reader.position += npoints
@@ -187,6 +187,29 @@ function Base.seek(reader::DataPacketStreamer, pos)
 end
 
 Base.eof(reader::DataPacketStreamer) = eof(reader.io)
+
+"""
+Read all data from a single channel
+"""
+function readchannel(reader::DataPacketStreamer, channel::Integer;chunksize=1024^2)
+    data = fill(zero(Int16), reader.npoints)
+    _npoints = div(div(chunksize,2), reader.nchannels)
+    chunks = collect(range(0, stop=reader.npoints, step=_npoints))
+    #check the last chunk
+    if chunks == [1]
+        chunks = [1,reader.npoints]
+    end
+    chunks[end] = reader.npoints
+    _npoints = maximum(diff(chunks))+1
+    _data = fill(zero(Int16), reader.nchannels, _npoints)
+    fs = Int64(filesize(reader.io))
+    for (i0, i1) in zip(1:length(chunks)-1, 2:length(chunks))
+        _diff = chunks[i1] - chunks[i0]
+        read!(reader, view(_data, :, 1:_diff))
+        data[chunks[i0]+1:chunks[i1]] .= _data[channel,1:_diff]
+    end
+    data
+end
 
 function Base.close(reader::DataPacketStreamer)
 	reader.ownstream && close(reader.io)
@@ -363,7 +386,7 @@ function get_packet!(io::IOStream, header::BasicNEVHeader, wf_type::DataType)
     timestamp = read(io, UInt32)
     packet_id = read(io, UInt16)
     #reset and read the appropriate packet
-    seek(io,pos) 
+    seek(io,pos)
     Ne = header.nbytes_packets-18
     N = div(header.nbytes_packets-8, sizeof(wf_type))
     if packet_id == 0
@@ -396,7 +419,7 @@ end
 function get_wftype(header::WaveEventHeader)
     nb = header.bytes_sample
     T = Int8
-    if nb == 2 
+    if nb == 2
         T = Int16
     elseif 2 < nb <= 4
         T = Int32
@@ -429,7 +452,7 @@ function NFXBasicHeader(ff::IO)
     args = Any[]
     for f in fieldnames(NFXBasicHeader)
         ft = fieldtype(NFXBasicHeader, f)
-        push!(args, read(ff,ft)) 
+        push!(args, read(ff,ft))
     end
     NFXBasicHeader(args...)
 end
@@ -461,7 +484,7 @@ function get_header(ff::IO, ::Type{T}) where T <: Union{NFXBasicHeader, NFXExten
     args = Any[]
     for f in fieldnames(T)
         ft = fieldtype(T, f)
-        push!(args, read(ff,ft)) 
+        push!(args, read(ff,ft))
     end
     T(args...)
 end
