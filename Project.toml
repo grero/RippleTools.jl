@@ -7,6 +7,7 @@ version = "0.8.0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 UnalignedVectors = "f306ff79-ba0f-5c52-9e7c-6e6505f53397"
 
