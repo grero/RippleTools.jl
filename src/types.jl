@@ -164,12 +164,12 @@ function DataPacketStreamer(io::IO, ownstream::Bool)
 	DataPacketStreamer(io, offset, 0, header, headers, timestamp, npoints, ichs, ownstream)
 end
 
-function Base.read(reader::DataPacketStreamer, npoints::Int64)
+function Base.read(reader::DataPacketStreamer, npoints::Integer)
     data = fill(zero(Int16), reader.nchannels, npoints)
 	data = read!(reader, data)
 end
 
-function Base.read!(reader::DataPacketStreamer, data::Matrix{Int16})
+function Base.read!(reader::DataPacketStreamer, data::AbstractMatrix{Int16})
 	read!(reader.io, data)
 	npoints = size(data,2)
 	reader.position += npoints
