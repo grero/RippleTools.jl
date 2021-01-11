@@ -363,7 +363,7 @@ function get_packet!(io::IOStream, header::BasicNEVHeader, wf_type::DataType)
     timestamp = read(io, UInt32)
     packet_id = read(io, UInt16)
     #reset and read the appropriate packet
-    seek(io,pos) 
+    seek(io,pos)
     Ne = header.nbytes_packets-18
     N = div(header.nbytes_packets-8, sizeof(wf_type))
     if packet_id == 0
@@ -396,7 +396,7 @@ end
 function get_wftype(header::WaveEventHeader)
     nb = header.bytes_sample
     T = Int8
-    if nb == 2 
+    if nb == 2
         T = Int16
     elseif 2 < nb <= 4
         T = Int32
@@ -429,7 +429,7 @@ function NFXBasicHeader(ff::IO)
     args = Any[]
     for f in fieldnames(NFXBasicHeader)
         ft = fieldtype(NFXBasicHeader, f)
-        push!(args, read(ff,ft)) 
+        push!(args, read(ff,ft))
     end
     NFXBasicHeader(args...)
 end
@@ -461,7 +461,7 @@ function get_header(ff::IO, ::Type{T}) where T <: Union{NFXBasicHeader, NFXExten
     args = Any[]
     for f in fieldnames(T)
         ft = fieldtype(T, f)
-        push!(args, read(ff,ft)) 
+        push!(args, read(ff,ft))
     end
     T(args...)
 end
