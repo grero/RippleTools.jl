@@ -117,6 +117,14 @@ end
 			@test position(pp.io) == 10751
 			data3 = read(pp, 200)
 			@test cat(data1,data2, dims=2) == data3
+
+            #loading channel
+            seek(pp, 0)
+            channeldata = RippleTools.readchannel(pp, 31)
+            @test length(channeldata) == pp.npoints
+            seek(pp,0)
+            alldata = RippleTools.read(pp, pp.npoints)
+            @test alldata[31,:] ≈ channeldata
 			close(pp)
 		end
     end
