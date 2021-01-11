@@ -3,6 +3,7 @@ using StaticArrays
 using FileIO
 using Dates
 using Mmap
+using ProgressMeter
 using UnalignedVectors
 
 include("types.jl")
